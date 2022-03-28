@@ -22,12 +22,23 @@ const ForgotPassword = () => {
       setLoading(true);
       await resetPassword(emailRef.current.value);
 
-      setMessage("Check your inbox for further instructions");
+      return setMessage("Check your inbox for further instructions");
     } catch (error) {
-      setError("Failed to Reset Password");
-      console.error(error.message);
+      alert(error.message);
+
+      if (error.message === "Firebase: Error (auth/wrong-password).") {
+        setError("Wrong password");
+      } else if (error.message === "Firebase: Error (auth/user-not-found).") {
+        setError("User not found");
+      } else if (error.message === "Firebase: Error (auth/invalid-email).") {
+        setError("invalid email");
+      } else if (error.message === "Firebase: Error (auth/internal-error).") {
+        setError("internal error");
+      } else {
+        setError("Failed to Reset Password");
+      }
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

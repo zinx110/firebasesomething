@@ -177,6 +177,7 @@ const SessionId = (props) => {
 
           runTransaction(postRef, (post) => {
             console.log(post);
+
             if (post) {
               if (post.usersCount < post.usersMax) {
                 post.usersCount++;
@@ -242,6 +243,7 @@ const SessionId = (props) => {
 
         runTransaction(postRef, (post) => {
           console.log(post);
+
           if (post) {
             post.usersCount--;
             setUsersCount(post.usersCount);

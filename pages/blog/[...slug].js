@@ -22,7 +22,7 @@ const Blog = (props) => {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {data.photoURL && (
+      {data.authorImg && (
         <Image
           src={data.authorImg}
           alt={data.authorAlt}

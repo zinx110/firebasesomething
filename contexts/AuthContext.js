@@ -76,10 +76,9 @@ export const AuthProvider = ({ children }) => {
               "finished updating database for new user from anonymous"
             );
           });
+          console.log("anonymous user turned permanent");
+          return await user;
         }
-
-        console.log("anonymous user turned permanent");
-        return await user;
       } catch (error) {
         console.log(error);
         return error;
@@ -116,10 +115,9 @@ export const AuthProvider = ({ children }) => {
           update(ref(database), userObject).then(() => {
             console.log("finished updating database for new user");
           });
+          console.log("new user created");
+          return await user;
         }
-
-        console.log("new user created");
-        return await user;
       } catch (error) {
         console.log(error);
         return error;
@@ -133,18 +131,19 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     // remove player from all sessions
-    update(ref(database), {
-      [`userStatus/${currentUser?.uid}/status`]: "offline",
-    });
-    update(ref(database), {
-      [`userStatus/${currentUser?.uid}/timestamp`]: serverTimestamp(),
-    });
 
     const removePlayer = async (playerId) => {
       // check if user is in whitelist
 
       try {
         console.log("starting to remove from whitelist");
+
+        update(ref(database), {
+          [`userStatus/${currentUser?.uid}/status`]: "offline",
+        });
+        update(ref(database), {
+          [`userStatus/${currentUser?.uid}/timestamp`]: serverTimestamp(),
+        });
 
         //decreasing usercount
 
@@ -153,7 +152,7 @@ export const AuthProvider = ({ children }) => {
         );
 
         const sessionList = sessionListData.val();
-        console.log(sessionList);
+        console.log("sessionList");
 
         try {
           console.log("removing user from all database");
@@ -172,75 +171,51 @@ export const AuthProvider = ({ children }) => {
             [`userData/${playerId}`]: null,
           });
 
-          try {
-            const iterateAllSessions = Object.entries(sessionList).map(
-              ([id, value]) => {
-                update(ref(database), {
-                  [`sessionLists/${id}/whitelist/${playerId}`]: null,
-                });
-
-                const decreaseUsersCount = (id) => {
-                  const db = database;
-
-                  const postRef = ref(db, "/sessionData/" + id);
-                  console.log(postRef);
-                  console.log(id);
-
-                  id &&
-                    runTransaction(postRef, (post) => {
-                      console.log(post);
-                      if (post) {
-                        post.usersCount--;
-                      }
-                      return post;
-                    });
-                };
-
-                decreaseUsersCount(id);
-
-                console.log("decreased usercount");
-              }
-            );
-
-            Promise.all(iterateAllSessions)
-              .then(() => {
-                console.log("deleted in sessionList");
-              })
-              .catch((error) => {
-                console.log(error);
-              });
-            Promise.all(iterateAllSession2)
-              .then(() => {
-                console.log("deleted in sessionList");
-
-                return signOut(auth);
-              })
-              .catch((error) => {
-                console.log(error);
-                return signOut(auth);
-              });
-          } catch (error) {
-            console.log("decrese usersCount error");
-            return signOut(auth);
-          }
-
-          return signOut(auth);
+          console.log("deleted in remove database");
         } catch (error) {
           console.log("removing user from database error");
-          console.log(error);
-          return signOut(auth);
+          console.log(error.message);
+        } finally {
+          return (
+            sessionList &&
+            Object.entries(sessionList).forEach(([id, value]) => {
+              update(ref(database), {
+                [`sessionLists/${id}/whitelist/${playerId}`]: null,
+              });
+
+              const decreaseUsersCount = async (id) => {
+                const db = database;
+
+                const postRef = ref(db, "/sessionData/" + id);
+
+                const res = await (id &&
+                  runTransaction(postRef, (post) => {
+                    if (post) {
+                      post.usersCount--;
+                    }
+                    console.log("post");
+                    return post;
+                  }));
+                if (res) {
+                  return signOut(auth);
+                }
+              };
+
+              decreaseUsersCount(id);
+            })
+          );
         }
       } catch (error) {
         console.log("remove player error error");
-        console.log(error);
-        return signOut(auth);
+        console.log(error.message);
+      } finally {
       }
     };
 
     //
 
     if (currentUser && currentUser.isAnonymous) {
-      removePlayer(currentUser.uid);
+      return removePlayer(currentUser.uid);
     } else {
       return signOut(auth);
     }

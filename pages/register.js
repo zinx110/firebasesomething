@@ -19,22 +19,47 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (emailRef.current.value === "") {
+      return setError("Please insert email");
+    } else if (passwordRef.current.value === "") {
+      return setError("Please insert password");
+    }
+    if (usernameRef.current.value === "") {
+      return setError("Please insert a username");
+    } else if (photoUrlRef.current.value === "") {
+      return setError("Please upload a photo");
+    }
+
     if (passwordRef.current.value !== confirmPasswordRef.current.value) {
       return setError("password do not match");
     }
+
     try {
       setError("");
       setLoading(true);
-      await register(
+      const res = await register(
         emailRef.current.value,
         passwordRef.current.value,
         usernameRef.current.value,
         photoUrlRef.current.value
       );
-      router.push("/session");
+      if (res) {
+        router.push("/session");
+      }
     } catch (error) {
-      setError("Failed to create an account");
-      console.error(error.message);
+      alert(error.message);
+
+      if (error.message === "Firebase: Error (auth/wrong-password).") {
+        setError("Wrong password");
+      } else if (error.message === "Firebase: Error (auth/user-not-found).") {
+        setError("User not found");
+      } else if (error.message === "Firebase: Error (auth/invalid-email).") {
+        setError("invalid email");
+      } else if (error.message === "Firebase: Error (auth/internal-error).") {
+        setError("internal error");
+      } else {
+        setError("Failed to create an account");
+      }
     }
     setLoading(false);
   };

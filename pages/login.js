@@ -16,14 +16,37 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (emailRef.current.value === "") {
+      return setError("Please insert email");
+    } else if (passwordRef.current.value === "") {
+      return setError("Please insert password");
+    }
+
     try {
       setError("");
+
       setLoading(true);
-      await login(emailRef.current.value, passwordRef.current.value);
-      router.push("/session");
+      const res = await login(
+        emailRef.current.value,
+        passwordRef.current.value
+      );
+      if (res) {
+        router.push("/session");
+      }
     } catch (error) {
-      setError("Failed to Log in");
-      console.error(error.message);
+      alert(error.message);
+
+      if (error.message === "Firebase: Error (auth/wrong-password).") {
+        setError("Wrong password");
+      } else if (error.message === "Firebase: Error (auth/user-not-found).") {
+        setError("User not found");
+      } else if (error.message === "Firebase: Error (auth/invalid-email).") {
+        setError("invalid email");
+      } else if (error.message === "Firebase: Error (auth/internal-error).") {
+        setError("internal error");
+      } else {
+        setError("Failed to Log in");
+      }
     }
     setLoading(false);
   };

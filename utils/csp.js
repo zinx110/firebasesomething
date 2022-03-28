@@ -16,7 +16,7 @@ const getCsp = (inlineScriptSource) => {
       "base64"
     )}'`
   );
-  csp.push(`style-src 'self'${isProd ? "" : ` 'unsafe-inline'`}`);
+  csp.push(`style-src 'self'  'unsafe-inline'`);
   csp.push(
     `connect-src 'self' vitals.vercel-insights.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com   https://firestore.googleapis.com`
   );
